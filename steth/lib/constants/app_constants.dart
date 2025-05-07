@@ -4,8 +4,22 @@ import 'package:flutter/material.dart';
 
 class AppConstants {
   // App Information
-  static const String appName = 'MyFlutterApp';
+  static const String appName = 'Stethaim';
   static const String appVersion = '1.0.0';
+
+  // colors
+  static const Color primaryColor = Color(0xFF912611);
+  static const Color secondaryColor = Color(0xFF0F5E84);
+  static const Color backgroundColor = Color(0xFFF8F8F8);
+  static const Color accent1Color = Color(0xFF1148B3);
+  static const Color accent2Color = Color(0xFFE5BD1C);
+  static const Color accent3Color = Color(0xFF139846);
+  static const Color accent4Color = Color(0xFFBC2C2C);
+  static const Color neutral1Color = Color(0xFF191919);
+  static const Color neutral2Color = Color(0xFF333333);
+  static const Color neutral3Color = Color(0xFF808080);
+  static const Color neutral4Color = Color(0xFFB3B3B3);
+  static const Color neutral5Color = Color(0xFFD9D9D9);
 
   // API Endpoints
   static const String baseUrl = 'https://api.example.com/';
@@ -24,7 +38,7 @@ class AppConstants {
 
   // Durations
   static const Duration animationDuration = Duration(milliseconds: 300);
-  static const Duration splashDelay = Duration(seconds: 2);
+  static const Duration splashDelay = Duration(seconds: 5);
 
   // Error Messages
   static const String networkError = 'Network error. Please try again.';
