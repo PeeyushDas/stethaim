@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../utils/size_config.dart';
+import 'package:stethaim/utils/size_config.dart';
 
 class AppTypography extends ThemeExtension<AppTypography> {
   final TextStyle heading1SemiBold;
@@ -42,6 +42,44 @@ class AppTypography extends ThemeExtension<AppTypography> {
     required this.body4Medium,
   });
 
+  // Methods to get styles with custom colors
+  TextStyle heading1SemiBoldWithColor(Color color) =>
+      heading1SemiBold.copyWith(color: color);
+  TextStyle heading1MediumWithColor(Color color) =>
+      heading1Medium.copyWith(color: color);
+  TextStyle heading2SemiBoldWithColor(Color color) =>
+      heading2SemiBold.copyWith(color: color);
+  TextStyle heading2MediumWithColor(Color color) =>
+      heading2Medium.copyWith(color: color);
+  TextStyle heading3SemiBoldWithColor(Color color) =>
+      heading3SemiBold.copyWith(color: color);
+  TextStyle heading3MediumWithColor(Color color) =>
+      heading3Medium.copyWith(color: color);
+  TextStyle heading4SemiBoldWithColor(Color color) =>
+      heading4SemiBold.copyWith(color: color);
+  TextStyle heading4MediumWithColor(Color color) =>
+      heading4Medium.copyWith(color: color);
+  TextStyle heading5SemiBoldWithColor(Color color) =>
+      heading5SemiBold.copyWith(color: color);
+  TextStyle heading5MediumWithColor(Color color) =>
+      heading5Medium.copyWith(color: color);
+  TextStyle body1SemiBoldWithColor(Color color) =>
+      body1SemiBold.copyWith(color: color);
+  TextStyle body1MediumWithColor(Color color) =>
+      body1Medium.copyWith(color: color);
+  TextStyle body2SemiBoldWithColor(Color color) =>
+      body2SemiBold.copyWith(color: color);
+  TextStyle body2MediumWithColor(Color color) =>
+      body2Medium.copyWith(color: color);
+  TextStyle body3SemiBoldWithColor(Color color) =>
+      body3SemiBold.copyWith(color: color);
+  TextStyle body3MediumWithColor(Color color) =>
+      body3Medium.copyWith(color: color);
+  TextStyle body4SemiBoldWithColor(Color color) =>
+      body4SemiBold.copyWith(color: color);
+  TextStyle body4MediumWithColor(Color color) =>
+      body4Medium.copyWith(color: color);
+
   static AppTypography of(BuildContext context) {
     SizeConfig.init(context);
     return AppTypography(
@@ -51,6 +89,7 @@ class AppTypography extends ThemeExtension<AppTypography> {
         fontSize: 4.8 * SizeConfig.textMultiplier,
         height: 1.2,
         letterSpacing: -0.02 * (4.8 * SizeConfig.textMultiplier),
+        color: Colors.black,
       ),
       heading1Medium: TextStyle(
         fontFamily: 'DM Sans',
@@ -58,6 +97,7 @@ class AppTypography extends ThemeExtension<AppTypography> {
         fontSize: 4.8 * SizeConfig.textMultiplier,
         height: 1.2,
         letterSpacing: -0.02 * (4.8 * SizeConfig.textMultiplier),
+        color: Colors.black,
       ),
       heading2SemiBold: TextStyle(
         fontFamily: 'DM Sans',
@@ -65,6 +105,7 @@ class AppTypography extends ThemeExtension<AppTypography> {
         fontSize: 3.6 * SizeConfig.textMultiplier,
         height: 1.2,
         letterSpacing: -0.02 * (3.6 * SizeConfig.textMultiplier),
+        color: Colors.black,
       ),
       heading2Medium: TextStyle(
         fontFamily: 'DM Sans',
@@ -72,6 +113,7 @@ class AppTypography extends ThemeExtension<AppTypography> {
         fontSize: 3.6 * SizeConfig.textMultiplier,
         height: 1.2,
         letterSpacing: -0.02 * (3.6 * SizeConfig.textMultiplier),
+        color: Colors.black,
       ),
       heading3SemiBold: TextStyle(
         fontFamily: 'DM Sans',
@@ -79,6 +121,7 @@ class AppTypography extends ThemeExtension<AppTypography> {
         fontSize: 3.2 * SizeConfig.textMultiplier,
         height: 1.2,
         letterSpacing: -0.02 * (3.2 * SizeConfig.textMultiplier),
+        color: Colors.black,
       ),
       heading3Medium: TextStyle(
         fontFamily: 'DM Sans',
@@ -86,90 +129,103 @@ class AppTypography extends ThemeExtension<AppTypography> {
         fontSize: 3.2 * SizeConfig.textMultiplier,
         height: 1.2,
         letterSpacing: -0.02 * (3.2 * SizeConfig.textMultiplier),
+        color: Colors.black,
       ),
       heading4SemiBold: TextStyle(
         fontFamily: 'DM Sans',
         fontWeight: FontWeight.w600,
         fontSize: 2.4 * SizeConfig.textMultiplier,
         height: 1.2,
-        letterSpacing: -0.01 * (2.4 * SizeConfig.textMultiplier),
+        letterSpacing: -0.02 * (2.4 * SizeConfig.textMultiplier),
+        color: Colors.black,
       ),
       heading4Medium: TextStyle(
         fontFamily: 'DM Sans',
         fontWeight: FontWeight.w500,
         fontSize: 2.4 * SizeConfig.textMultiplier,
         height: 1.2,
-        letterSpacing: -0.01 * (2.4 * SizeConfig.textMultiplier),
+        letterSpacing: -0.02 * (2.4 * SizeConfig.textMultiplier),
+        color: Colors.black,
       ),
       heading5SemiBold: TextStyle(
         fontFamily: 'DM Sans',
         fontWeight: FontWeight.w600,
         fontSize: 2.0 * SizeConfig.textMultiplier,
         height: 1.2,
-        letterSpacing: 0,
+        letterSpacing: -0.02 * (2.0 * SizeConfig.textMultiplier),
+        color: Colors.black,
       ),
       heading5Medium: TextStyle(
         fontFamily: 'DM Sans',
         fontWeight: FontWeight.w500,
         fontSize: 2.0 * SizeConfig.textMultiplier,
         height: 1.2,
-        letterSpacing: 0,
+        letterSpacing: -0.02 * (2.0 * SizeConfig.textMultiplier),
+        color: Colors.black,
       ),
       body1SemiBold: TextStyle(
         fontFamily: 'DM Sans',
         fontWeight: FontWeight.w600,
-        fontSize: 1.6 * SizeConfig.textMultiplier,
-        height: 1.4,
+        fontSize: 1.8 * SizeConfig.textMultiplier,
+        height: 1.5,
         letterSpacing: 0,
+        color: Colors.black,
       ),
       body1Medium: TextStyle(
         fontFamily: 'DM Sans',
         fontWeight: FontWeight.w400,
-        fontSize: 1.6 * SizeConfig.textMultiplier,
-        height: 1.4,
+        fontSize: 1.8 * SizeConfig.textMultiplier,
+        height: 1.5,
         letterSpacing: 0,
+        color: Colors.black,
       ),
       body2SemiBold: TextStyle(
         fontFamily: 'DM Sans',
         fontWeight: FontWeight.w600,
-        fontSize: 1.4 * SizeConfig.textMultiplier,
-        height: 1.4,
+        fontSize: 1.6 * SizeConfig.textMultiplier,
+        height: 1.5,
         letterSpacing: 0,
+        color: Colors.black,
       ),
       body2Medium: TextStyle(
         fontFamily: 'DM Sans',
         fontWeight: FontWeight.w400,
-        fontSize: 1.4 * SizeConfig.textMultiplier,
-        height: 1.4,
+        fontSize: 1.6 * SizeConfig.textMultiplier,
+        height: 1.5,
         letterSpacing: 0,
+        color: Colors.black,
       ),
       body3SemiBold: TextStyle(
         fontFamily: 'DM Sans',
         fontWeight: FontWeight.w600,
-        fontSize: 1.2 * SizeConfig.textMultiplier,
-        height: 1.4,
+        fontSize: 1.4 * SizeConfig.textMultiplier,
+        height: 1.5,
         letterSpacing: 0,
+        color: Colors.black,
       ),
       body3Medium: TextStyle(
         fontFamily: 'DM Sans',
         fontWeight: FontWeight.w400,
-        fontSize: 1.2 * SizeConfig.textMultiplier,
-        height: 1.4,
+        fontSize: 1.4 * SizeConfig.textMultiplier,
+        height: 1.5,
         letterSpacing: 0,
+        color: Colors.black,
       ),
       body4SemiBold: TextStyle(
         fontFamily: 'DM Sans',
         fontWeight: FontWeight.w600,
-        fontSize: 1.0 * SizeConfig.textMultiplier,
-        height: 1.4,
+        fontSize: 1.2 * SizeConfig.textMultiplier,
+        height: 1.5,
         letterSpacing: 0,
+        color: Colors.black,
       ),
       body4Medium: TextStyle(
         fontFamily: 'DM Sans',
         fontWeight: FontWeight.w400,
-        fontSize: 1.0 * SizeConfig.textMultiplier,
-        height: 1.4,
+        fontSize: 1.2 * SizeConfig.textMultiplier,
+        height: 1.5,
         letterSpacing: 0,
+        color: Colors.black,
       ),
     );
   }

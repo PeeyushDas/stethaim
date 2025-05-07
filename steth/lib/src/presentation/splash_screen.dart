@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../constants/app_constants.dart';
 import '../../utils/size_config.dart';
 import 'temp_screen.dart';
+import 'welcome_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -75,7 +76,9 @@ class _SplashScreenState extends State<SplashScreen>
       Future.delayed(AppConstants.splashDelay, () {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const TempScreen()),
+          MaterialPageRoute(
+            builder: (context) => const PhoneVerificationScreen(),
+          ),
         );
       });
     });

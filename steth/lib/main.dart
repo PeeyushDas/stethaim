@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:stethaim/constants/app_constants.dart';
 import 'package:stethaim/src/presentation/splash_screen.dart';
+import 'package:stethaim/theme/text_theme.dart';
 import 'package:stethaim/utils/size_config.dart';
 
 void main() {
@@ -19,6 +20,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primaryColor: AppConstants.primaryColor,
         colorScheme: ColorScheme.fromSeed(seedColor: AppConstants.primaryColor),
+        extensions: [AppTypography.of(context)],
       ),
       builder: (context, child) {
         return Center(
