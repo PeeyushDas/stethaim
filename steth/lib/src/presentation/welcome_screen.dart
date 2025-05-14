@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
-import 'package:stethaim/src/presentation/otp_screen.dart';
 import 'package:stethaim/theme/text_theme.dart';
 import '../../constants/app_constants.dart';
 import '../../utils/size_config.dart';
@@ -34,7 +34,9 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
             color: AppConstants.neutral1Color,
             size: 5 * SizeConfig.blockSizeHorizontal,
           ),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            context.go('/');
+          },
         ),
         actions: [
           TextButton(
@@ -145,14 +147,8 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
                       _isPhoneValid
                           ? () {
                             if (_formKey.currentState!.validate()) {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder:
-                                      (context) => OtpVerificationScreen(
-                                        phoneNumber: phoneNumber,
-                                      ),
-                                ),
+                              context.go(
+                                '/otp/${Uri.encodeComponent(phoneNumber)}',
                               );
                             }
                           }

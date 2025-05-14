@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../constants/app_constants.dart';
 import '../../utils/size_config.dart';
-import 'temp_screen.dart';
-import 'welcome_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -26,14 +25,11 @@ class _SplashScreenState extends State<SplashScreen>
       duration: const Duration(milliseconds: 3000),
     );
 
-    // Create multiple wave animations with different delays
     for (int i = 0; i < 3; i++) {
-      // Ensure delay and end values stay within 0.0-1.0 range
-      final delay = i * 0.2; // Reduced from 0.3 to ensure we don't exceed 1.0
+      final delay = i * 0.2;
       final begin = 0.1;
       final end = 0.8;
 
-      // Calculate the end of interval, making sure it doesn't exceed 1.0
       final endInterval = (delay + 0.7) > 1.0 ? 1.0 : (delay + 0.7);
 
       final Animation<double> sizeAnimation = TweenSequence<double>([
@@ -74,12 +70,7 @@ class _SplashScreenState extends State<SplashScreen>
     // Navigate to next screen after delay
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Future.delayed(AppConstants.splashDelay, () {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const PhoneVerificationScreen(),
-          ),
-        );
+        context.go('/phone');
       });
     });
   }

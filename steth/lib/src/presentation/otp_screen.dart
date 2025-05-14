@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_otp_text_field/flutter_otp_text_field.dart';
+import 'package:go_router/go_router.dart';
 import 'package:stethaim/constants/app_constants.dart';
 import 'package:stethaim/theme/text_theme.dart';
 import 'package:stethaim/utils/size_config.dart';
@@ -51,8 +52,8 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
             actions: [
               TextButton(
                 onPressed: () {
-                  Navigator.pop(context);
-                  // Navigate to next screen
+                  // Navigate to the next screen
+                  context.go('/scan');
                 },
                 child: Text(
                   "Continue",
@@ -108,7 +109,9 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: AppConstants.neutral1Color),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            context.go('/phone');
+          },
         ),
       ),
       body: SafeArea(
@@ -138,7 +141,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
               SizedBox(height: SizeConfig.heightMultiplier * 3),
               OtpTextField(
                 numberOfFields: 6,
-                borderColor: AppConstants.neutral5Color,
+                borderColor: AppConstants.neutral3Color,
                 focusedBorderColor: Colors.black,
                 showFieldAsBox: true,
                 borderWidth: 1.0,
