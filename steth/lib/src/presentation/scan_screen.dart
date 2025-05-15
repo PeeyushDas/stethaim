@@ -5,6 +5,7 @@ import 'package:stethaim/utils/size_config.dart';
 import 'package:stethaim/constants/app_constants.dart';
 import 'package:circular_countdown_timer/circular_countdown_timer.dart';
 import 'package:go_router/go_router.dart';
+import 'package:stethaim/src/components/bluetooth_connection.dart';
 
 class ScanningScreen extends StatefulWidget {
   const ScanningScreen({Key? key}) : super(key: key);
@@ -19,6 +20,16 @@ class _ScanningScreenState extends State<ScanningScreen> {
   int _currentLobeIndex = 0;
   final CountDownController _countDownController = CountDownController();
   final int _duration = 5;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Show dialog after the build is complete
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      NeumorexConnectionDialogs.showBluetoothPromptDialog(context);
+    });
+  }
 
   // For the specific indicator point
   final List<Map<String, dynamic>> _lobes = [
