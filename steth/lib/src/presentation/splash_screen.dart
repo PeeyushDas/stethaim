@@ -70,7 +70,8 @@ class _SplashScreenState extends State<SplashScreen>
     // Navigate to next screen after delay
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Future.delayed(AppConstants.splashDelay, () {
-        context.go('/phone');
+        context.go('/phone'); // Navigate to phone verification screen
+        // context.go('/phone'); // Uncomment to navigate to phone verification
       });
     });
   }

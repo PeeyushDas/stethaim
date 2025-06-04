@@ -6,9 +6,14 @@ import 'package:stethaim/constants/app_constants.dart';
 import 'package:circular_countdown_timer/circular_countdown_timer.dart';
 import 'package:go_router/go_router.dart';
 import 'package:stethaim/src/components/bluetooth_connection.dart';
+import 'package:stethaim/models/patient.dart';
 
 class ScanningScreen extends StatefulWidget {
-  const ScanningScreen({Key? key}) : super(key: key);
+  final String? patientId;
+  final Patient? patient;
+
+  const ScanningScreen({Key? key, this.patientId, this.patient})
+    : super(key: key);
 
   @override
   State<ScanningScreen> createState() => _ScanningScreenState();
@@ -103,7 +108,14 @@ class _ScanningScreenState extends State<ScanningScreen> {
   void _handleSecondaryButtonPress() {
     if (!_hasStartedScanning) {
       // Back button before any scanning
-      context.go('/phone');
+      if (widget.patientId != null) {
+        context.go(
+          '/patient_details/${widget.patientId}',
+          extra: widget.patient,
+        );
+      } else {
+        context.go('/home');
+      }
     } else {
       // Scan Again button after scanning has started
       _countDownController.restart();
@@ -114,8 +126,13 @@ class _ScanningScreenState extends State<ScanningScreen> {
   }
 
   void _navigateToResults() {
-    // Navigate to results page
-    context.go('/report');
+    // Navigate to results page with patient context
+    if (widget.patientId != null) {
+      context.go('/report/${widget.patientId}', extra: widget.patient);
+    } else {
+      // Fallback if no patient context
+      context.go('/home');
+    }
   }
 
   String _getPrimaryButtonText() {
@@ -144,10 +161,21 @@ class _ScanningScreenState extends State<ScanningScreen> {
         centerTitle: true,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => context.go('/phone'),
+          onPressed: () {
+            if (widget.patientId != null) {
+              context.go(
+                '/patient_details/${widget.patientId}',
+                extra: widget.patient,
+              );
+            } else {
+              context.go('/home');
+            }
+          },
         ),
         title: Text(
-          'Scanning Lungs',
+          widget.patient != null
+              ? 'Scanning ${widget.patient!.fullName}'
+              : 'Scanning Lungs',
           style: Theme.of(context).extension<AppTypography>()!.heading5SemiBold,
         ),
       ),

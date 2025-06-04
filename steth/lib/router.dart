@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:stethaim/models/patient.dart';
+import 'package:stethaim/src/presentation/add_patient.dart';
+import 'package:stethaim/src/presentation/home_page.dart';
+import 'package:stethaim/src/presentation/patient_details.dart';
 import 'package:stethaim/src/presentation/splash_screen.dart';
 import 'package:stethaim/src/presentation/welcome_screen.dart';
 import 'package:stethaim/src/presentation/otp_screen.dart';
@@ -34,14 +38,41 @@ final GoRouter router = GoRouter(
       },
     ),
     GoRoute(
-      path: '/scan',
-      name: 'scan',
-      builder: (context, state) => const ScanningScreen(),
+      path: '/home',
+      name: 'home',
+      builder: (context, state) => const AllPatientsScreen(),
     ),
     GoRoute(
-      path: '/report',
+      path: '/add_patient',
+      name: 'add_patient',
+      builder: (context, state) => const AddPatientScreen(),
+    ),
+    GoRoute(
+      path: '/patient_details/:patientId',
+      name: 'patient_details',
+      builder: (context, state) {
+        final patientId = state.pathParameters['patientId'] ?? '';
+        final patient = state.extra as Patient?;
+        return PatientDetailsScreen(patientId: patientId, patient: patient);
+      },
+    ),
+    GoRoute(
+      path: '/scan/:patientId',
+      name: 'scan',
+      builder: (context, state) {
+        final patientId = state.pathParameters['patientId'] ?? '';
+        final patient = state.extra as Patient?;
+        return ScanningScreen(patientId: patientId, patient: patient);
+      },
+    ),
+    GoRoute(
+      path: '/report/:patientId',
       name: 'report',
-      builder: (context, state) => const LungsReportScreen(),
+      builder: (context, state) {
+        final patientId = state.pathParameters['patientId'] ?? '';
+        final patient = state.extra as Patient?;
+        return LungsReportScreen(patientId: patientId, patient: patient);
+      },
     ),
   ],
 );

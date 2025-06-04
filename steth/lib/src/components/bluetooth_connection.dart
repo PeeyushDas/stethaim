@@ -72,7 +72,11 @@ class NeumorexConnectionDialogs {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppConstants.primaryColor,
                       padding: EdgeInsets.symmetric(vertical: 15),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4),
+                      ),
                     ),
+
                     child: Text(
                       'Ok',
                       style: TextStyle(fontSize: 16, color: Colors.white),

@@ -44,6 +44,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
       context: context,
       builder:
           (context) => AlertDialog(
+            backgroundColor: AppConstants.backgroundColor,
             title: Text(
               "Success",
               style: TextStyle(color: AppConstants.primaryColor),
@@ -53,7 +54,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
               TextButton(
                 onPressed: () {
                   // Navigate to the next screen
-                  context.go('/scan');
+                  context.go('/home');
                 },
                 child: Text(
                   "Continue",
@@ -70,6 +71,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
       context: context,
       builder:
           (context) => AlertDialog(
+            backgroundColor: AppConstants.backgroundColor,
             title: Text(
               "Error",
               style: TextStyle(color: AppConstants.accent4Color),

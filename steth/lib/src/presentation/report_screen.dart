@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:stethaim/constants/app_constants.dart';
@@ -7,9 +6,14 @@ import 'package:stethaim/src/components/processing.dart';
 import 'package:stethaim/utils/size_config.dart';
 import 'package:stethaim/theme/text_theme.dart';
 import 'package:go_router/go_router.dart';
+import 'package:stethaim/models/patient.dart';
 
 class LungsReportScreen extends StatefulWidget {
-  const LungsReportScreen({Key? key}) : super(key: key);
+  final String? patientId;
+  final Patient? patient;
+
+  const LungsReportScreen({Key? key, this.patientId, this.patient})
+    : super(key: key);
 
   @override
   State<LungsReportScreen> createState() => _LungsReportScreenState();
@@ -73,10 +77,14 @@ class _LungsReportScreenState extends State<LungsReportScreen> {
         centerTitle: true,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => context.go('/scan'),
+          onPressed: () {
+            context.go('/home');
+          },
         ),
         title: Text(
-          'Lungs Report',
+          widget.patient != null
+              ? '${widget.patient!.fullName} Report'
+              : 'Lungs Report',
           style: Theme.of(context).extension<AppTypography>()!.heading5SemiBold,
         ),
       ),
@@ -93,7 +101,6 @@ class _LungsReportScreenState extends State<LungsReportScreen> {
                   vertical: SizeConfig.blockSizeVertical * 2,
                 ),
                 padding: EdgeInsets.all(SizeConfig.blockSizeHorizontal * 2),
-
                 child: SvgPicture.asset(
                   'assets/report.svg',
                   height: SizeConfig.blockSizeVertical * 20,
@@ -192,7 +199,6 @@ class _LungsReportScreenState extends State<LungsReportScreen> {
                                         ? AppConstants.accent4Color
                                         : AppConstants.accent3Color,
                                   ),
-
                               textAlign: TextAlign.right,
                             ),
                           ),
@@ -216,6 +222,12 @@ class _LungsReportScreenState extends State<LungsReportScreen> {
                       child: ElevatedButton(
                         onPressed: () {
                           // Download report logic
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Report downloaded successfully'),
+                              backgroundColor: AppConstants.accent3Color,
+                            ),
+                          );
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppConstants.primaryColor,
@@ -237,7 +249,14 @@ class _LungsReportScreenState extends State<LungsReportScreen> {
                       height: SizeConfig.blockSizeVertical * 6,
                       child: OutlinedButton(
                         onPressed: () {
-                          context.go('/scan');
+                          if (widget.patientId != null) {
+                            context.go(
+                              '/scan/${widget.patientId}',
+                              extra: widget.patient,
+                            );
+                          } else {
+                            context.go('/home');
+                          }
                         },
                         style: OutlinedButton.styleFrom(
                           side: BorderSide(color: AppConstants.primaryColor),
