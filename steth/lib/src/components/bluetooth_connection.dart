@@ -4,6 +4,7 @@ import 'package:flutter_blue_classic/flutter_blue_classic.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:stethaim/constants/app_constants.dart';
 import 'package:stethaim/src/components/bluetooth_device_list_entry.dart';
+import 'package:stethaim/src/services/bluetooth_service.dart';
 
 class NeumorexConnectionDialogs {
   // First dialog - Connect with Neumorex
@@ -396,10 +397,26 @@ class _BluetoothDeviceListDialogState
     }
   }
 
-  void _connectToDevice(BluetoothDevice device) {
-    print("Connecting to device: ${device.name} (${device.address})");
-    Navigator.of(context).pop(); // Close device list dialog
-    NeumorexConnectionDialogs.showAnimatedConnectingDialog(context);
+  void _connectToDevice(BluetoothDevice device) async {
+    print(
+      "Attempting to connect to device: ${device.name} (${device.address})",
+    );
+
+    // Close device list dialog
+    Navigator.of(context).pop();
+
+    // Show connecting dialog with real connection attempt
+    _showRealConnectingDialog(device);
+  }
+
+  void _showRealConnectingDialog(BluetoothDevice device) {
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return _RealConnectingDialog(device: device);
+      },
+    );
   }
 
   Future<void> _enableBluetooth() async {
@@ -418,7 +435,7 @@ class _BluetoothDeviceListDialogState
       BluetoothAdapterState currentState = await _blueClassic.adapterState.first
           .timeout(
             Duration(seconds: 5),
-            onTimeout: () => BluetoothAdapterState.unknown,
+            onTimeout: () => _blueClassic.adapterState.first,
           );
 
       print("Bluetooth state after turn on: $currentState");
@@ -910,6 +927,370 @@ class _AnimatedConnectingDialogState extends State<_AnimatedConnectingDialog>
                   ),
                 ),
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// NEW: Real Connecting Dialog
+class _RealConnectingDialog extends StatefulWidget {
+  final BluetoothDevice device;
+
+  const _RealConnectingDialog({Key? key, required this.device})
+    : super(key: key);
+
+  @override
+  _RealConnectingDialogState createState() => _RealConnectingDialogState();
+}
+
+class _RealConnectingDialogState extends State<_RealConnectingDialog>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _progressController;
+  late Animation<double> _progressAnimation;
+
+  String _connectionStatus = 'Connecting to device...';
+  bool _isConnecting = true;
+  bool _connectionSuccessful = false;
+
+  final BluetoothService _bluetoothService = BluetoothService();
+
+  @override
+  void initState() {
+    super.initState();
+
+    _progressController = AnimationController(
+      duration: Duration(seconds: 15), // 15 second timeout
+      vsync: this,
+    );
+
+    _progressAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(_progressController)..addListener(() {
+      setState(() {});
+    });
+
+    _startConnection();
+  }
+
+  @override
+  void dispose() {
+    _progressController.dispose();
+    super.dispose();
+  }
+
+  void _startConnection() async {
+    _progressController.forward();
+
+    setState(() {
+      _connectionStatus = 'Connecting to ${widget.device.name ?? 'device'}...';
+    });
+
+    try {
+      // Attempt real connection
+      bool connected = await _bluetoothService.connectToDevice(widget.device);
+
+      if (mounted) {
+        if (connected) {
+          setState(() {
+            _connectionStatus = 'Connected successfully!';
+            _isConnecting = false;
+            _connectionSuccessful = true;
+          });
+
+          // Show success for 2 seconds then close
+          await Future.delayed(Duration(seconds: 2));
+
+          if (mounted) {
+            Navigator.of(context).pop();
+            _showConnectionSuccessDialog();
+          }
+        } else {
+          _showConnectionError('Failed to connect to device');
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        _showConnectionError('Connection error: $e');
+      }
+    }
+  }
+
+  void _showConnectionError(String error) {
+    setState(() {
+      _connectionStatus = error;
+      _isConnecting = false;
+      _connectionSuccessful = false;
+    });
+  }
+
+  void _showConnectionSuccessDialog() {
+    showDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        // Auto-close after 3 seconds
+        Future.delayed(Duration(seconds: 3), () {
+          if (context.mounted) {
+            Navigator.of(context).pop();
+          }
+        });
+
+        return Dialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Green tick icon with animation
+                Container(
+                  width: 80,
+                  height: 80,
+                  margin: EdgeInsets.only(bottom: 20),
+                  decoration: BoxDecoration(
+                    color: AppConstants.accent3Color.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.check_circle,
+                    color: AppConstants.accent3Color,
+                    size: 60,
+                  ),
+                ),
+
+                // Success text
+                Text(
+                  '${widget.device.name ?? 'Device'} Connected',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: AppConstants.neutral1Color,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+
+                SizedBox(height: 8),
+
+                Text(
+                  'Successfully connected!',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: AppConstants.neutral3Color,
+                  ),
+                ),
+
+                SizedBox(height: 16),
+
+                // Connection details
+                Container(
+                  padding: EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppConstants.accent3Color.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Device:',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppConstants.neutral3Color,
+                            ),
+                          ),
+                          Text(
+                            widget.device.name ?? 'Unknown',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: AppConstants.neutral1Color,
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 4),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Address:',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppConstants.neutral3Color,
+                            ),
+                          ),
+                          Text(
+                            widget.device.address,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: AppConstants.neutral1Color,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        width: double.infinity,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Row(
+              children: [
+                if (_isConnecting)
+                  SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        AppConstants.primaryColor,
+                      ),
+                    ),
+                  )
+                else if (_connectionSuccessful)
+                  Icon(
+                    Icons.check_circle,
+                    color: AppConstants.accent3Color,
+                    size: 20,
+                  )
+                else
+                  Icon(Icons.error, color: AppConstants.accent4Color, size: 20),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    _isConnecting
+                        ? 'Connecting to Stethoscope...'
+                        : _connectionSuccessful
+                        ? 'Connection Successful!'
+                        : 'Connection Failed',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            // Status text
+            Text(
+              _connectionStatus,
+              style: TextStyle(
+                fontSize: 14,
+                color:
+                    _connectionSuccessful
+                        ? AppConstants.accent3Color
+                        : _isConnecting
+                        ? AppConstants.neutral3Color
+                        : AppConstants.accent4Color,
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Progress bar (only show when connecting)
+            if (_isConnecting) ...[
+              LinearProgressIndicator(
+                backgroundColor: Colors.grey[300],
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  AppConstants.primaryColor,
+                ),
+                value: _progressAnimation.value,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Timeout in ${(15 - (_progressAnimation.value * 15)).round()}s',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AppConstants.neutral3Color,
+                ),
+              ),
+            ],
+
+            const SizedBox(height: 24),
+
+            // Action buttons
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                if (_isConnecting)
+                  TextButton(
+                    onPressed: () {
+                      _bluetoothService.disconnect();
+                      Navigator.of(context).pop();
+                    },
+                    child: Text(
+                      'Cancel',
+                      style: TextStyle(
+                        color: AppConstants.accent4Color,
+                        fontSize: 14,
+                      ),
+                    ),
+                  )
+                else if (!_connectionSuccessful)
+                  Row(
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: Text(
+                          'Close',
+                          style: TextStyle(
+                            color: AppConstants.neutral3Color,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          // Fix: Create new dialog instead of calling undefined method
+                          showDialog<void>(
+                            context: context,
+                            barrierDismissible: false,
+                            builder: (BuildContext context) {
+                              return _RealConnectingDialog(
+                                device: widget.device,
+                              );
+                            },
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppConstants.primaryColor,
+                        ),
+                        child: Text(
+                          'Retry',
+                          style: TextStyle(color: Colors.white, fontSize: 14),
+                        ),
+                      ),
+                    ],
+                  ),
+              ],
             ),
           ],
         ),
