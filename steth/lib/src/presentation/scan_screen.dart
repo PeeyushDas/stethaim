@@ -21,7 +21,9 @@ class ScanningScreen extends StatefulWidget {
 
 class _ScanningScreenState extends State<ScanningScreen> {
   bool _isScanning = false;
-  bool _hasStartedScanning = false;
+  bool _hasStartedCurrentLobe = false; // Track if current lobe scan has started
+  bool _hasCompletedCurrentLobe =
+      false; // Track if current lobe scan is completed
   int _currentLobeIndex = 0;
   final CountDownController _countDownController = CountDownController();
   final int _duration = 5;
@@ -82,46 +84,47 @@ class _ScanningScreenState extends State<ScanningScreen> {
     },
   ];
 
-  void _handlePrimaryButtonPress() {
-    if (!_hasStartedScanning) {
-      // First time pressing Start Scanning
+  void _handleStartButtonPress() {
+    // Start scanning for current lobe
+    setState(() {
+      _hasStartedCurrentLobe = true;
+      _isScanning = true;
+      _hasCompletedCurrentLobe = false;
+    });
+    _countDownController.start();
+  }
+
+  void _handleNextButtonPress() {
+    // Move to next lobe
+    if (_currentLobeIndex < _lobes.length - 1) {
       setState(() {
-        _hasStartedScanning = true;
-        _isScanning = true;
+        _currentLobeIndex++;
+        _hasStartedCurrentLobe = false;
+        _hasCompletedCurrentLobe = false;
+        _isScanning = false;
       });
-      _countDownController.start();
-    } else if (!_isScanning) {
-      // Pressing Next after scan completion
-      if (_currentLobeIndex < _lobes.length - 1) {
-        // Move to next lobe
-        setState(() {
-          _currentLobeIndex++;
-        });
-        _countDownController.restart();
-      } else {
-        // All lobes scanned, show results
-        _navigateToResults();
-      }
+      _countDownController.reset();
+    } else {
+      // All lobes scanned, show results
+      _navigateToResults();
     }
   }
 
-  void _handleSecondaryButtonPress() {
-    if (!_hasStartedScanning) {
-      // Back button before any scanning
-      if (widget.patientId != null) {
-        context.go(
-          '/patient_details/${widget.patientId}',
-          extra: widget.patient,
-        );
-      } else {
-        context.go('/home');
-      }
+  void _handleScanAgainButtonPress() {
+    // Restart current lobe scan
+    setState(() {
+      _hasStartedCurrentLobe = false;
+      _hasCompletedCurrentLobe = false;
+      _isScanning = false;
+    });
+    _countDownController.reset();
+  }
+
+  void _handleBackButtonPress() {
+    if (widget.patientId != null) {
+      context.go('/patient_details/${widget.patientId}', extra: widget.patient);
     } else {
-      // Scan Again button after scanning has started
-      _countDownController.restart();
-      setState(() {
-        _isScanning = true;
-      });
+      context.go('/home');
     }
   }
 
@@ -136,17 +139,61 @@ class _ScanningScreenState extends State<ScanningScreen> {
   }
 
   String _getPrimaryButtonText() {
-    if (!_hasStartedScanning) {
+    if (!_hasStartedCurrentLobe) {
       return 'Start Scanning';
-    } else if (_currentLobeIndex == _lobes.length - 1 && !_isScanning) {
-      return 'Show Results';
+    } else if (_hasCompletedCurrentLobe) {
+      if (_currentLobeIndex == _lobes.length - 1) {
+        return 'Show Results';
+      } else {
+        return 'Next';
+      }
     } else {
-      return 'Next';
+      return 'Scanning...'; // This won't be clickable
     }
   }
 
   String _getSecondaryButtonText() {
-    return _hasStartedScanning ? '⟳ Scan Again' : 'Back';
+    if (!_hasStartedCurrentLobe) {
+      return 'Back';
+    } else {
+      return '⟳ Scan Again';
+    }
+  }
+
+  bool _isPrimaryButtonEnabled() {
+    return !_isScanning; // Disabled only while actively scanning
+  }
+
+  void _handlePrimaryButtonPress() {
+    if (!_hasStartedCurrentLobe) {
+      _handleStartButtonPress();
+    } else if (_hasCompletedCurrentLobe) {
+      _handleNextButtonPress();
+    }
+    // Do nothing if currently scanning
+  }
+
+  void _handleSecondaryButtonPress() {
+    if (!_hasStartedCurrentLobe) {
+      _handleBackButtonPress();
+    } else {
+      _handleScanAgainButtonPress();
+    }
+  }
+
+  String _getInstructionText() {
+    if (!_hasStartedCurrentLobe) {
+      return 'Place the Neumo Rex at the indicated place & tap "Start Scanning"';
+    } else if (_isScanning) {
+      return 'Keep the stethoscope steady. Scanning in progress...';
+    } else if (_hasCompletedCurrentLobe) {
+      if (_currentLobeIndex == _lobes.length - 1) {
+        return 'Scan completed! Tap "Show Results" to view the report.';
+      } else {
+        return 'Scan completed! Tap "Next" to scan the next area or "Scan Again" to repeat.';
+      }
+    }
+    return '';
   }
 
   @override
@@ -186,17 +233,45 @@ class _ScanningScreenState extends State<ScanningScreen> {
           ),
           child: Column(
             children: [
+              // Progress indicator
+              Container(
+                margin: EdgeInsets.only(top: SizeConfig.blockSizeVertical * 1),
+                padding: EdgeInsets.symmetric(
+                  horizontal: SizeConfig.blockSizeHorizontal * 4,
+                  vertical: SizeConfig.blockSizeVertical * 1,
+                ),
+                decoration: BoxDecoration(
+                  color: AppConstants.primaryColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Area ${_currentLobeIndex + 1} of ${_lobes.length}',
+                      style: Theme.of(context)
+                          .extension<AppTypography>()!
+                          .body2MediumWithColor(AppConstants.primaryColor),
+                    ),
+                    Text(
+                      _lobes[_currentLobeIndex]['label'],
+                      style: Theme.of(context)
+                          .extension<AppTypography>()!
+                          .body2SemiBoldWithColor(AppConstants.primaryColor),
+                    ),
+                  ],
+                ),
+              ),
+
               // Anatomy visualization with indicator
               SizedBox(
-                height: SizeConfig.screenHeight * 0.35,
+                height: SizeConfig.screenHeight * 0.32,
                 child: StackedSvgImages(
                   upperImagePath: _lobes[_currentLobeIndex]['imagePath'],
                   xCoordinate: _lobes[_currentLobeIndex]['xCoordinate'],
                   yCoordinate: _lobes[_currentLobeIndex]['yCoordinate'],
                   lowerImagePath: _lobes[_currentLobeIndex]['baseImagePath'],
                 ),
-
-                // Label with arrow
               ),
 
               // Instruction text
@@ -205,12 +280,16 @@ class _ScanningScreenState extends State<ScanningScreen> {
                   vertical: SizeConfig.blockSizeVertical * 2,
                 ),
                 child: Text(
-                  'Place the Neumo Rex at the indicated place & tap "Start Scanning"',
+                  _getInstructionText(),
                   textAlign: TextAlign.center,
-                  style:
-                      Theme.of(
-                        context,
-                      ).extension<AppTypography>()!.heading5Medium,
+                  style: Theme.of(
+                    context,
+                  ).extension<AppTypography>()!.heading5Medium.copyWith(
+                    color:
+                        _isScanning
+                            ? AppConstants.primaryColor
+                            : AppConstants.neutral1Color,
+                  ),
                 ),
               ),
 
@@ -219,15 +298,15 @@ class _ScanningScreenState extends State<ScanningScreen> {
                 duration: _duration,
                 initialDuration: 0,
                 controller: _countDownController,
-                width: SizeConfig.blockSizeHorizontal * 50,
-                height: SizeConfig.blockSizeHorizontal * 50,
+                width: SizeConfig.blockSizeHorizontal * 45,
+                height: SizeConfig.blockSizeHorizontal * 45,
                 ringColor: Colors.grey.withOpacity(0.3),
                 fillColor: AppConstants.primaryColor,
                 backgroundColor: Colors.white,
                 strokeWidth: 4.0,
                 strokeCap: StrokeCap.round,
                 textStyle: TextStyle(
-                  fontSize: SizeConfig.textMultiplier * 3.5,
+                  fontSize: SizeConfig.textMultiplier * 3.0,
                   fontWeight: FontWeight.w300,
                   color: AppConstants.primaryColor,
                 ),
@@ -244,6 +323,7 @@ class _ScanningScreenState extends State<ScanningScreen> {
                 onComplete: () {
                   setState(() {
                     _isScanning = false;
+                    _hasCompletedCurrentLobe = true;
                   });
                 },
               ),
@@ -257,12 +337,15 @@ class _ScanningScreenState extends State<ScanningScreen> {
                 ),
                 child: Column(
                   children: [
+                    // Primary button (Start/Next/Show Results)
                     SizedBox(
                       width: double.infinity,
                       height: SizeConfig.blockSizeVertical * 6,
                       child: ElevatedButton(
                         onPressed:
-                            _isScanning ? null : _handlePrimaryButtonPress,
+                            _isPrimaryButtonEnabled()
+                                ? _handlePrimaryButtonPress
+                                : null,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppConstants.primaryColor,
                           disabledBackgroundColor: AppConstants.primaryColor
@@ -271,22 +354,48 @@ class _ScanningScreenState extends State<ScanningScreen> {
                             borderRadius: BorderRadius.circular(4),
                           ),
                         ),
-                        child: Text(
-                          _getPrimaryButtonText(),
-                          style: Theme.of(context)
-                              .extension<AppTypography>()!
-                              .body1SemiBoldWithColor(Colors.white),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            if (_isScanning) ...[
+                              SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white,
+                                  ),
+                                ),
+                              ),
+                              SizedBox(width: 8),
+                            ],
+                            Text(
+                              _getPrimaryButtonText(),
+                              style: Theme.of(context)
+                                  .extension<AppTypography>()!
+                                  .body1SemiBoldWithColor(Colors.white),
+                            ),
+                          ],
                         ),
                       ),
                     ),
+
                     SizedBox(height: SizeConfig.blockSizeVertical * 1.5),
+
+                    // Secondary button (Back/Scan Again)
                     SizedBox(
                       width: double.infinity,
                       height: SizeConfig.blockSizeVertical * 6,
                       child: OutlinedButton(
                         onPressed: _handleSecondaryButtonPress,
                         style: OutlinedButton.styleFrom(
-                          side: BorderSide(color: AppConstants.primaryColor),
+                          side: BorderSide(
+                            color:
+                                _hasStartedCurrentLobe
+                                    ? AppConstants.accent2Color
+                                    : AppConstants.primaryColor,
+                          ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(4),
                           ),
@@ -296,7 +405,9 @@ class _ScanningScreenState extends State<ScanningScreen> {
                           style: Theme.of(
                             context,
                           ).extension<AppTypography>()!.body1SemiBoldWithColor(
-                            AppConstants.primaryColor,
+                            _hasStartedCurrentLobe
+                                ? AppConstants.accent2Color
+                                : AppConstants.primaryColor,
                           ),
                         ),
                       ),

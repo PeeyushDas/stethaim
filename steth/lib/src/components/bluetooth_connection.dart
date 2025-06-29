@@ -435,7 +435,7 @@ class _BluetoothDeviceListDialogState
       BluetoothAdapterState currentState = await _blueClassic.adapterState.first
           .timeout(
             Duration(seconds: 5),
-            onTimeout: () => _blueClassic.adapterState.first,
+            // onTimeout: () => BluetoothAdapterState.unknown,
           );
 
       print("Bluetooth state after turn on: $currentState");
@@ -1032,119 +1032,7 @@ class _RealConnectingDialogState extends State<_RealConnectingDialog>
       context: context,
       barrierDismissible: true,
       builder: (BuildContext context) {
-        // Auto-close after 3 seconds
-        Future.delayed(Duration(seconds: 3), () {
-          if (context.mounted) {
-            Navigator.of(context).pop();
-          }
-        });
-
-        return Dialog(
-          backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Green tick icon with animation
-                Container(
-                  width: 80,
-                  height: 80,
-                  margin: EdgeInsets.only(bottom: 20),
-                  decoration: BoxDecoration(
-                    color: AppConstants.accent3Color.withOpacity(0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.check_circle,
-                    color: AppConstants.accent3Color,
-                    size: 60,
-                  ),
-                ),
-
-                // Success text
-                Text(
-                  '${widget.device.name ?? 'Device'} Connected',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: AppConstants.neutral1Color,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-
-                SizedBox(height: 8),
-
-                Text(
-                  'Successfully connected!',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: AppConstants.neutral3Color,
-                  ),
-                ),
-
-                SizedBox(height: 16),
-
-                // Connection details
-                Container(
-                  padding: EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: AppConstants.accent3Color.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Device:',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: AppConstants.neutral3Color,
-                            ),
-                          ),
-                          Text(
-                            widget.device.name ?? 'Unknown',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              color: AppConstants.neutral1Color,
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 4),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Address:',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: AppConstants.neutral3Color,
-                            ),
-                          ),
-                          Text(
-                            widget.device.address,
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              color: AppConstants.neutral1Color,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
+        return _ConnectionStatusDialog(device: widget.device);
       },
     );
   }
@@ -1289,6 +1177,322 @@ class _RealConnectingDialogState extends State<_RealConnectingDialog>
                         ),
                       ),
                     ],
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// NEW: Connection Status Dialog (for showing connection success)
+class _ConnectionStatusDialog extends StatefulWidget {
+  final BluetoothDevice device;
+
+  const _ConnectionStatusDialog({Key? key, required this.device})
+    : super(key: key);
+
+  @override
+  _ConnectionStatusDialogState createState() => _ConnectionStatusDialogState();
+}
+
+class _ConnectionStatusDialogState extends State<_ConnectionStatusDialog> {
+  final BluetoothService _bluetoothService = BluetoothService();
+  late StreamSubscription<bool> _connectionSubscription;
+  late StreamSubscription<String> _reconnectionStatusSubscription;
+
+  bool _isConnected = false;
+  String _statusMessage = 'Connected successfully!';
+  Timer? _autoCloseTimer;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _isConnected = _bluetoothService.isConnected;
+
+    // Listen to connection state changes
+    _connectionSubscription = _bluetoothService.connectionStateStream.listen((
+      connected,
+    ) {
+      if (mounted) {
+        setState(() {
+          _isConnected = connected;
+        });
+
+        // Reset auto-close timer when connection state changes
+        _resetAutoCloseTimer();
+      }
+    });
+
+    // Listen to reconnection status
+    _reconnectionStatusSubscription = _bluetoothService.reconnectionStatusStream
+        .listen((status) {
+          if (mounted) {
+            setState(() {
+              _statusMessage = status;
+            });
+          }
+        });
+
+    // Enable auto-reconnection
+    _bluetoothService.enableAutoReconnect();
+
+    // Auto-close after 3 seconds if connection remains stable
+    _resetAutoCloseTimer();
+  }
+
+  void _resetAutoCloseTimer() {
+    _autoCloseTimer?.cancel();
+    if (_isConnected) {
+      _autoCloseTimer = Timer(Duration(seconds: 3), () {
+        if (mounted && _isConnected) {
+          Navigator.of(context).pop();
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _autoCloseTimer?.cancel();
+    _connectionSubscription.cancel();
+    _reconnectionStatusSubscription.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Status icon
+            Container(
+              width: 80,
+              height: 80,
+              margin: EdgeInsets.only(bottom: 20),
+              decoration: BoxDecoration(
+                color:
+                    _isConnected
+                        ? AppConstants.accent3Color.withOpacity(0.1)
+                        : _bluetoothService.isReconnecting
+                        ? AppConstants.primaryColor.withOpacity(0.1)
+                        : AppConstants.accent4Color.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child:
+                  _isConnected
+                      ? Icon(
+                        Icons.check_circle,
+                        color: AppConstants.accent3Color,
+                        size: 60,
+                      )
+                      : _bluetoothService.isReconnecting
+                      ? SizedBox(
+                        width: 40,
+                        height: 40,
+                        child: CircularProgressIndicator(
+                          color: AppConstants.primaryColor,
+                          strokeWidth: 4,
+                        ),
+                      )
+                      : Icon(
+                        Icons.bluetooth_disabled,
+                        color: AppConstants.accent4Color,
+                        size: 60,
+                      ),
+            ),
+
+            // Status text
+            Text(
+              _isConnected
+                  ? '${widget.device.name ?? 'Device'} Connected'
+                  : _bluetoothService.isReconnecting
+                  ? 'Reconnecting...'
+                  : 'Connection Lost',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: AppConstants.neutral1Color,
+              ),
+              textAlign: TextAlign.center,
+            ),
+
+            SizedBox(height: 8),
+
+            Text(
+              _statusMessage,
+              style: TextStyle(
+                fontSize: 14,
+                color:
+                    _isConnected
+                        ? AppConstants.accent3Color
+                        : _bluetoothService.isReconnecting
+                        ? AppConstants.primaryColor
+                        : AppConstants.accent4Color,
+              ),
+              textAlign: TextAlign.center,
+            ),
+
+            SizedBox(height: 16),
+
+            // Connection details
+            Container(
+              padding: EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color:
+                    _isConnected
+                        ? AppConstants.accent3Color.withOpacity(0.1)
+                        : AppConstants.neutral4Color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Device:',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppConstants.neutral3Color,
+                        ),
+                      ),
+                      Text(
+                        widget.device.name ?? 'Unknown',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: AppConstants.neutral1Color,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 4),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Status:',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppConstants.neutral3Color,
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color:
+                                  _isConnected
+                                      ? AppConstants.accent3Color
+                                      : _bluetoothService.isReconnecting
+                                      ? AppConstants.primaryColor
+                                      : AppConstants.accent4Color,
+                            ),
+                          ),
+                          SizedBox(width: 6),
+                          Text(
+                            _isConnected
+                                ? 'Connected'
+                                : _bluetoothService.isReconnecting
+                                ? 'Reconnecting'
+                                : 'Disconnected',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: AppConstants.neutral1Color,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  if (_bluetoothService.isReconnecting) ...[
+                    SizedBox(height: 4),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Attempts:',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppConstants.neutral3Color,
+                          ),
+                        ),
+                        Text(
+                          '${_bluetoothService.reconnectionAttempts}/10',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: AppConstants.neutral1Color,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            ),
+
+            SizedBox(height: 20),
+
+            // Action buttons
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text(
+                    'Close',
+                    style: TextStyle(
+                      color: AppConstants.neutral3Color,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+                if (!_isConnected && !_bluetoothService.isReconnecting)
+                  ElevatedButton(
+                    onPressed: () async {
+                      // Manual reconnect attempt
+                      bool success = await _bluetoothService.connectToDevice(
+                        widget.device,
+                      );
+                      if (success) {
+                        _bluetoothService.enableAutoReconnect();
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppConstants.primaryColor,
+                    ),
+                    child: Text(
+                      'Reconnect',
+                      style: TextStyle(color: Colors.white, fontSize: 14),
+                    ),
+                  ),
+                if (_isConnected)
+                  ElevatedButton(
+                    onPressed: () {
+                      _bluetoothService.disconnect();
+                      Navigator.of(context).pop();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppConstants.accent4Color,
+                    ),
+                    child: Text(
+                      'Disconnect',
+                      style: TextStyle(color: Colors.white, fontSize: 14),
+                    ),
                   ),
               ],
             ),
