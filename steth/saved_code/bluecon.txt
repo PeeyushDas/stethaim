@@ -532,7 +532,7 @@ class _BluetoothDeviceListDialogState
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header with refresh button integrated
+            // Header
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -540,182 +540,150 @@ class _BluetoothDeviceListDialogState
                   'Select Bluetooth Device',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                 ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Show refresh button when Bluetooth is on
-                    if (_bluetoothState == BluetoothAdapterState.on)
-                      TextButton.icon(
-                        onPressed: _isLoading ? null : _getBondedDevices,
-                        icon: Icon(
-                          Icons.refresh,
-                          size: 16,
-                          color:
-                              _isLoading
-                                  ? AppConstants.neutral3Color
-                                  : AppConstants.primaryColor,
-                        ),
-                        label: Text(
-                          'Refresh',
-                          style: TextStyle(
-                            color:
-                                _isLoading
-                                    ? AppConstants.neutral3Color
-                                    : AppConstants.primaryColor,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-                    IconButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      icon: Icon(
-                        Icons.close,
-                        color: AppConstants.neutral3Color,
-                      ),
-                    ),
-                  ],
+                IconButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  icon: Icon(Icons.close, color: AppConstants.neutral3Color),
                 ),
               ],
             ),
-
-            // Reduced spacing
-            const SizedBox(height: 8),
-
-            // Commented out Bluetooth status container
-            // Container(
-            //   padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            //   decoration: BoxDecoration(
-            //     color:
-            //         _bluetoothState == BluetoothAdapterState.on
-            //             ? AppConstants.accent3Color.withOpacity(0.1)
-            //             : AppConstants.accent4Color.withOpacity(0.1),
-            //     borderRadius: BorderRadius.circular(6),
-            //   ),
-            //   child: Row(
-            //     children: [
-            //       Icon(
-            //         _bluetoothState == BluetoothAdapterState.on
-            //             ? Icons.bluetooth_connected
-            //             : Icons.bluetooth_disabled,
-            //         color:
-            //             _bluetoothState == BluetoothAdapterState.on
-            //                 ? AppConstants.accent3Color
-            //                 : AppConstants.accent4Color,
-            //         size: 16,
-            //       ),
-            //       SizedBox(width: 8),
-            //       Expanded(
-            //         child: Text(
-            //           _bluetoothState == BluetoothAdapterState.on
-            //               ? 'Bluetooth is ON'
-            //               : _bluetoothState == BluetoothAdapterState.turningOn
-            //               ? 'Turning on Bluetooth...'
-            //               : 'Bluetooth is OFF',
-            //           style: TextStyle(
-            //             color:
-            //                 _bluetoothState == BluetoothAdapterState.on
-            //                     ? AppConstants.accent3Color
-            //                     : AppConstants.accent4Color,
-            //             fontSize: 12,
-            //             fontWeight: FontWeight.w500,
-            //           ),
-            //         ),
-            //       ),
-            //       if (_bluetoothState == BluetoothAdapterState.on)
-            //         TextButton(
-            //           onPressed: _isLoading ? null : _getBondedDevices,
-            //           child: Text(
-            //             'Refresh',
-            //             style: TextStyle(
-            //               color:
-            //                   _isLoading
-            //                       ? AppConstants.neutral3Color
-            //                       : AppConstants.primaryColor,
-            //               fontSize: 12,
-            //             ),
-            //           ),
-            //         ),
-            //     ],
-            //   ),
-            // ),
-            // const SizedBox(height: 16),
-
-            // Device list content with better spacing
-            Expanded(child: _buildDeviceListContent()),
-
-            // Bottom section with improved spacing
             const SizedBox(height: 12),
 
-            // Simple cancel button, centered
-            Center(
-              child: TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                style: TextButton.styleFrom(
-                  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                ),
-                child: Text(
-                  'Cancel',
-                  style: TextStyle(
-                    color: AppConstants.neutral3Color,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
+            // Bluetooth status
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color:
+                    _bluetoothState == BluetoothAdapterState.on
+                        ? AppConstants.accent3Color.withOpacity(0.1)
+                        : AppConstants.accent4Color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    _bluetoothState == BluetoothAdapterState.on
+                        ? Icons.bluetooth_connected
+                        : Icons.bluetooth_disabled,
+                    color:
+                        _bluetoothState == BluetoothAdapterState.on
+                            ? AppConstants.accent3Color
+                            : AppConstants.accent4Color,
+                    size: 16,
                   ),
-                ),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      _bluetoothState == BluetoothAdapterState.on
+                          ? 'Bluetooth is ON'
+                          : _bluetoothState == BluetoothAdapterState.turningOn
+                          ? 'Turning on Bluetooth...'
+                          : 'Bluetooth is OFF',
+                      style: TextStyle(
+                        color:
+                            _bluetoothState == BluetoothAdapterState.on
+                                ? AppConstants.accent3Color
+                                : AppConstants.accent4Color,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  // Always show refresh button when Bluetooth is on
+                  if (_bluetoothState == BluetoothAdapterState.on)
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        TextButton(
+                          onPressed: _isLoading ? null : _getBondedDevices,
+                          child: Text(
+                            'Refresh',
+                            style: TextStyle(
+                              color:
+                                  _isLoading
+                                      ? AppConstants.neutral3Color
+                                      : AppConstants.primaryColor,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                        // Add scan button for discovery
+                        IconButton(
+                          onPressed:
+                              _isLoading
+                                  ? null
+                                  : () {
+                                    //     _blueClassic.openBluetoothSettings();
+                                  },
+                          icon: Icon(
+                            Icons.settings_bluetooth,
+                            color: AppConstants.primaryColor,
+                            size: 16,
+                          ),
+                          tooltip: 'Bluetooth Settings',
+                        ),
+                      ],
+                    ),
+                ],
               ),
             ),
+            const SizedBox(height: 16),
 
-            // Commented out bottom buttons row
-            // Row(
-            //   children: [
-            //     Expanded(
-            //       child: TextButton(
-            //         onPressed: () => Navigator.of(context).pop(),
-            //         child: Text(
-            //           'Cancel',
-            //           style: TextStyle(
-            //             color: AppConstants.neutral3Color,
-            //             fontSize: 14,
-            //           ),
-            //         ),
-            //       ),
-            //     ),
-            //     SizedBox(width: 12),
-            //     Expanded(
-            //       child: ElevatedButton(
-            //         onPressed:
-            //             _bluetoothState != BluetoothAdapterState.on &&
-            //                     !_isLoading
-            //                 ? _enableBluetooth
-            //                 : null,
-            //         style: ElevatedButton.styleFrom(
-            //           backgroundColor: AppConstants.primaryColor,
-            //           disabledBackgroundColor: AppConstants.neutral4Color,
-            //         ),
-            //         child:
-            //             _isLoading
-            //                 ? SizedBox(
-            //                   height: 16,
-            //                   width: 16,
-            //                   child: CircularProgressIndicator(
-            //                     strokeWidth: 2,
-            //                     valueColor: AlwaysStoppedAnimation<Color>(
-            //                       Colors.white,
-            //                     ),
-            //                   ),
-            //                 )
-            //                 : Text(
-            //                   _bluetoothState == BluetoothAdapterState.on
-            //                       ? 'Bluetooth ON'
-            //                       : 'Turn ON',
-            //                   style: TextStyle(
-            //                     color: Colors.white,
-            //                     fontSize: 14,
-            //                   ),
-            //                 ),
-            //       ),
-            //     ),
-            //   ],
-            // ),
+            // Device list content
+            Expanded(child: _buildDeviceListContent()),
+
+            // Bottom buttons
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: Text(
+                      'Cancel',
+                      style: TextStyle(
+                        color: AppConstants.neutral3Color,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed:
+                        _bluetoothState != BluetoothAdapterState.on &&
+                                !_isLoading
+                            ? _enableBluetooth
+                            : null,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppConstants.primaryColor,
+                      disabledBackgroundColor: AppConstants.neutral4Color,
+                    ),
+                    child:
+                        _isLoading
+                            ? SizedBox(
+                              height: 16,
+                              width: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
+                                ),
+                              ),
+                            )
+                            : Text(
+                              _bluetoothState == BluetoothAdapterState.on
+                                  ? 'Bluetooth ON'
+                                  : 'Turn ON',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                              ),
+                            ),
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),
@@ -828,14 +796,10 @@ class _BluetoothDeviceListDialogState
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.bluetooth_disabled,
-              size: 48,
-              color: AppConstants.neutral3Color,
-            ),
+            Icon(Icons.devices, size: 48, color: AppConstants.neutral3Color),
             SizedBox(height: 16),
             Text(
-              'Bluetooth is turned off',
+              'No paired devices found',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
@@ -844,49 +808,26 @@ class _BluetoothDeviceListDialogState
             ),
             SizedBox(height: 8),
             Text(
-              'Please turn on Bluetooth to see available devices.',
+              'Make sure your stethoscope is paired\nwith this device first.',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 14, color: AppConstants.neutral3Color),
+            ),
+            SizedBox(height: 16),
+            OutlinedButton(
+              onPressed: () {
+                openAppSettings();
+              },
+              style: OutlinedButton.styleFrom(
+                side: BorderSide(color: AppConstants.primaryColor),
+              ),
+              child: Text(
+                'Open Bluetooth Settings',
+                style: TextStyle(color: AppConstants.primaryColor),
+              ),
             ),
           ],
         ),
       );
-      // return Center(
-      //   child: Column(
-      //     mainAxisAlignment: MainAxisAlignment.center,
-      //     children: [
-      //       Icon(Icons.devices, size: 48, color: AppConstants.neutral3Color),
-      //       SizedBox(height: 16),
-      //       Text(
-      //         'No paired devices found',
-      //         style: TextStyle(
-      //           fontSize: 16,
-      //           fontWeight: FontWeight.w500,
-      //           color: AppConstants.neutral2Color,
-      //         ),
-      //       ),
-      //       SizedBox(height: 8),
-      //       Text(
-      //         'Make sure your stethoscope is paired\nwith this device first.',
-      //         textAlign: TextAlign.center,
-      //         style: TextStyle(fontSize: 14, color: AppConstants.neutral3Color),
-      //       ),
-      //       SizedBox(height: 16),
-      // OutlinedButton(
-      //   onPressed: () {
-      //     openAppSettings();
-      //   },
-      //   style: OutlinedButton.styleFrom(
-      //     side: BorderSide(color: AppConstants.primaryColor),
-      //   ),
-      //   child: Text(
-      //     'Open Bluetooth Settings',
-      //     style: TextStyle(color: AppConstants.primaryColor),
-      //   ),
-      // ),
-      //     ],
-      //   ),
-      // );
     }
 
     // Show the actual device list
