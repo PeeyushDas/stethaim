@@ -7,6 +7,8 @@ import 'package:circular_countdown_timer/circular_countdown_timer.dart';
 import 'package:go_router/go_router.dart';
 import 'package:stethaim/src/components/bluetooth_connection.dart';
 import 'package:stethaim/models/patient.dart';
+import 'package:stethaim/src/services/audio_recording_service.dart'; // Add this import
+import 'dart:async'; // Add this import
 
 class ScanningScreen extends StatefulWidget {
   final String? patientId;
@@ -21,21 +23,61 @@ class ScanningScreen extends StatefulWidget {
 
 class _ScanningScreenState extends State<ScanningScreen> {
   bool _isScanning = false;
-  bool _hasStartedCurrentLobe = false; // Track if current lobe scan has started
-  bool _hasCompletedCurrentLobe =
-      false; // Track if current lobe scan is completed
+  bool _hasStartedCurrentLobe = false;
+  bool _hasCompletedCurrentLobe = false;
   int _currentLobeIndex = 0;
   final CountDownController _countDownController = CountDownController();
   final int _duration = 5;
+
+  // Add recording service
+  final AudioRecordingService _recordingService = AudioRecordingService();
+  StreamSubscription<String>? _recordingStatusSubscription;
+  String _recordingStatus = '';
+  List<String> _recordedFiles = []; // Track recorded files for each lobe
 
   @override
   void initState() {
     super.initState();
 
+    // Initialize recorded files list
+    _recordedFiles = List.filled(_lobes.length, '');
+
+    // Listen to recording status
+    _recordingStatusSubscription = _recordingService.recordingStatusStream
+        .listen((status) {
+          if (mounted) {
+            setState(() {
+              _recordingStatus = status;
+            });
+
+            // Show snackbar for important recording events
+            if (status.contains('Recording saved') ||
+                status.contains('error') ||
+                status.contains('Failed')) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(status),
+                  backgroundColor:
+                      status.contains('error') || status.contains('Failed')
+                          ? AppConstants.accent4Color
+                          : AppConstants.accent3Color,
+                  duration: Duration(seconds: 3),
+                ),
+              );
+            }
+          }
+        });
+
     // Show dialog after the build is complete
     WidgetsBinding.instance.addPostFrameCallback((_) {
       NeumorexConnectionDialogs.showBluetoothPromptDialog(context);
     });
+  }
+
+  @override
+  void dispose() {
+    _recordingStatusSubscription?.cancel();
+    super.dispose();
   }
 
   // For the specific indicator point
@@ -84,14 +126,46 @@ class _ScanningScreenState extends State<ScanningScreen> {
     },
   ];
 
-  void _handleStartButtonPress() {
-    // Start scanning for current lobe
-    setState(() {
-      _hasStartedCurrentLobe = true;
-      _isScanning = true;
-      _hasCompletedCurrentLobe = false;
-    });
-    _countDownController.start();
+  void _handleStartButtonPress() async {
+    try {
+      // Start scanning for current lobe
+      setState(() {
+        _hasStartedCurrentLobe = true;
+        _isScanning = true;
+        _hasCompletedCurrentLobe = false;
+      });
+
+      // Start recording with custom filename
+      String fileName = await _recordingService.startRecording(
+        fileName: 'scan_${_currentLobeIndex + 1}',
+        patientId: widget.patient?.id ?? widget.patientId ?? 'unknown',
+        lobeLabel: _lobes[_currentLobeIndex]['label'],
+      );
+
+      print(
+        'Recording started for ${_lobes[_currentLobeIndex]['label']}: $fileName',
+      );
+
+      // Start the timer
+      _countDownController.start();
+    } catch (e) {
+      print('Error starting recording: $e');
+
+      // Reset state if recording failed
+      setState(() {
+        _hasStartedCurrentLobe = false;
+        _isScanning = false;
+        _hasCompletedCurrentLobe = false;
+      });
+
+      // Show error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to start recording: $e'),
+          backgroundColor: AppConstants.accent4Color,
+        ),
+      );
+    }
   }
 
   void _handleNextButtonPress() {
@@ -148,7 +222,7 @@ class _ScanningScreenState extends State<ScanningScreen> {
         return 'Next';
       }
     } else {
-      return 'Scanning...'; // This won't be clickable
+      return 'Scanning...';
     }
   }
 
@@ -161,7 +235,7 @@ class _ScanningScreenState extends State<ScanningScreen> {
   }
 
   bool _isPrimaryButtonEnabled() {
-    return !_isScanning; // Disabled only while actively scanning
+    return !_isScanning;
   }
 
   void _handlePrimaryButtonPress() {
@@ -170,7 +244,6 @@ class _ScanningScreenState extends State<ScanningScreen> {
     } else if (_hasCompletedCurrentLobe) {
       _handleNextButtonPress();
     }
-    // Do nothing if currently scanning
   }
 
   void _handleSecondaryButtonPress() {
@@ -185,7 +258,7 @@ class _ScanningScreenState extends State<ScanningScreen> {
     if (!_hasStartedCurrentLobe) {
       return 'Place the Neumo Rex at the indicated place & tap "Start Scanning"';
     } else if (_isScanning) {
-      return 'Keep the stethoscope steady. Scanning in progress...';
+      return 'Keep the stethoscope steady. Recording in progress...';
     } else if (_hasCompletedCurrentLobe) {
       if (_currentLobeIndex == _lobes.length - 1) {
         return 'Scan completed! Tap "Show Results" to view the report.';
@@ -263,6 +336,54 @@ class _ScanningScreenState extends State<ScanningScreen> {
                 ),
               ),
 
+              // Recording status indicator
+              if (_recordingStatus.isNotEmpty)
+                Container(
+                  margin: EdgeInsets.only(
+                    top: SizeConfig.blockSizeVertical * 1,
+                  ),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: SizeConfig.blockSizeHorizontal * 3,
+                    vertical: SizeConfig.blockSizeVertical * 0.5,
+                  ),
+                  decoration: BoxDecoration(
+                    color:
+                        _recordingService.isRecording
+                            ? AppConstants.accent4Color.withOpacity(0.1)
+                            : AppConstants.accent3Color.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        _recordingService.isRecording
+                            ? Icons.fiber_manual_record
+                            : Icons.check_circle,
+                        color:
+                            _recordingService.isRecording
+                                ? AppConstants.accent4Color
+                                : AppConstants.accent3Color,
+                        size: 12,
+                      ),
+                      SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          _recordingStatus,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color:
+                                _recordingService.isRecording
+                                    ? AppConstants.accent4Color
+                                    : AppConstants.accent3Color,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
               // Anatomy visualization with indicator
               SizedBox(
                 height: SizeConfig.screenHeight * 0.32,
@@ -319,12 +440,29 @@ class _ScanningScreenState extends State<ScanningScreen> {
                   setState(() {
                     _isScanning = true;
                   });
+                  print(
+                    'Timer started for ${_lobes[_currentLobeIndex]['label']}',
+                  );
                 },
-                onComplete: () {
+                onComplete: () async {
                   setState(() {
                     _isScanning = false;
                     _hasCompletedCurrentLobe = true;
                   });
+
+                  // Stop recording when timer completes
+                  try {
+                    String? recordedFile =
+                        await _recordingService.stopRecording();
+                    if (recordedFile != null) {
+                      _recordedFiles[_currentLobeIndex] = recordedFile;
+                      print(
+                        'Recording completed for ${_lobes[_currentLobeIndex]['label']}: $recordedFile',
+                      );
+                    }
+                  } catch (e) {
+                    print('Error stopping recording: $e');
+                  }
                 },
               ),
 

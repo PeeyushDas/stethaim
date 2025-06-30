@@ -4,7 +4,8 @@
     <uses-permission android:name="android.permission.BLUETOOTH" />
     
     <!-- Permissions for file access (public external storage) -->
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" 
+        android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="28" />
     <!-- If you target Android 11+ and need broad access (use cautiously) -->
