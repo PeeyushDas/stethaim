@@ -21,13 +21,20 @@ class LungsReportScreen extends StatefulWidget {
 
 class _LungsReportScreenState extends State<LungsReportScreen> {
   Timer? _dialogTimer;
+  bool _dialogShown = false;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Show dialog immediately when dependencies are ready
+    if (!_dialogShown) {
       _showAnalyzingDialog();
-    });
+    }
   }
 
   @override
@@ -37,28 +44,37 @@ class _LungsReportScreenState extends State<LungsReportScreen> {
   }
 
   void _showAnalyzingDialog() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext dialogContext) {
-        _dialogTimer = Timer(Duration(seconds: 5), () {
-          if (dialogContext.mounted) {
-            Navigator.of(dialogContext).pop();
-          }
-        });
+    if (_dialogShown) return;
+    _dialogShown = true;
 
-        return AnalyzingResultsDialog();
-      },
-    ).then((_) {
-      // Ensure timer is canceled if dialog is dismissed another way
-      _dialogTimer?.cancel();
-      _dialogTimer = null;
+    // Use Future.delayed with Duration.zero to show dialog immediately
+    Future.delayed(Duration.zero, () {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext dialogContext) {
+          _dialogTimer = Timer(Duration(seconds: 5), () {
+            if (dialogContext.mounted) {
+              Navigator.of(dialogContext).pop();
+            }
+          });
+
+          return AnalyzingResultsDialog();
+        },
+      ).then((_) {
+        // Ensure timer is canceled if dialog is dismissed another way
+        _dialogTimer?.cancel();
+        _dialogTimer = null;
+      });
     });
   }
 
   @override
   Widget build(BuildContext context) {
     SizeConfig.init(context);
+
+    // Remove the duplicate dialog trigger from build method
+    // The dialog is now shown in didChangeDependencies
 
     // Report data
     final List<Map<String, dynamic>> reportData = [
