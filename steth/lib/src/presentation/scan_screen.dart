@@ -280,7 +280,11 @@ class _ScanningScreenState extends State<ScanningScreen> {
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black),
+          icon: Icon(
+            Icons.arrow_back,
+            color: Colors.black,
+            size: SizeConfig.imageSizeMultiplier * 6,
+          ),
           onPressed: () {
             if (widget.patientId != null) {
               context.go(
@@ -296,265 +300,340 @@ class _ScanningScreenState extends State<ScanningScreen> {
           widget.patient != null
               ? 'Scanning ${widget.patient!.fullName}'
               : 'Scanning Lungs',
-          style: Theme.of(context).extension<AppTypography>()!.heading5SemiBold,
+          style: Theme.of(context)
+              .extension<AppTypography>()!
+              .heading5SemiBold
+              .copyWith(fontSize: SizeConfig.textMultiplier * 2.2),
         ),
       ),
       body: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: SizeConfig.blockSizeHorizontal * 5,
-          ),
-          child: Column(
-            children: [
-              // Progress indicator
-              Container(
-                margin: EdgeInsets.only(top: SizeConfig.blockSizeVertical * 1),
-                padding: EdgeInsets.symmetric(
-                  horizontal: SizeConfig.blockSizeHorizontal * 4,
-                  vertical: SizeConfig.blockSizeVertical * 1,
-                ),
-                decoration: BoxDecoration(
-                  color: AppConstants.primaryColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Area ${_currentLobeIndex + 1} of ${_lobes.length}',
-                      style: Theme.of(context)
-                          .extension<AppTypography>()!
-                          .body2MediumWithColor(AppConstants.primaryColor),
-                    ),
-                    Text(
-                      _lobes[_currentLobeIndex]['label'],
-                      style: Theme.of(context)
-                          .extension<AppTypography>()!
-                          .body2SemiBoldWithColor(AppConstants.primaryColor),
-                    ),
-                  ],
-                ),
-              ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            // Calculate responsive padding based on screen width
+            double horizontalPadding =
+                SizeConfig.orientation == Orientation.portrait
+                    ? SizeConfig.blockSizeHorizontal * 5
+                    : SizeConfig.blockSizeHorizontal * 8;
 
-              // Recording status indicator
-              if (_recordingStatus.isNotEmpty)
-                Container(
-                  margin: EdgeInsets.only(
-                    top: SizeConfig.blockSizeVertical * 1,
+            return Padding(
+              padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+              child: Column(
+                children: [
+                  // Progress indicator
+                  Container(
+                    margin: EdgeInsets.only(
+                      top: SizeConfig.blockSizeVertical * 1.5,
+                    ),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: SizeConfig.blockSizeHorizontal * 4,
+                      vertical: SizeConfig.blockSizeVertical * 1.5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppConstants.primaryColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(
+                        SizeConfig.blockSizeHorizontal * 2,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            'Area ${_currentLobeIndex + 1} of ${_lobes.length}',
+                            style: Theme.of(context)
+                                .extension<AppTypography>()!
+                                .body2MediumWithColor(AppConstants.primaryColor)
+                                .copyWith(
+                                  fontSize: SizeConfig.textMultiplier * 1.8,
+                                ),
+                          ),
+                        ),
+                        Flexible(
+                          child: Text(
+                            _lobes[_currentLobeIndex]['label'],
+                            style: Theme.of(context)
+                                .extension<AppTypography>()!
+                                .body2SemiBoldWithColor(
+                                  AppConstants.primaryColor,
+                                )
+                                .copyWith(
+                                  fontSize: SizeConfig.textMultiplier * 1.8,
+                                ),
+                            textAlign: TextAlign.end,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  padding: EdgeInsets.symmetric(
-                    horizontal: SizeConfig.blockSizeHorizontal * 3,
-                    vertical: SizeConfig.blockSizeVertical * 0.5,
-                  ),
-                  decoration: BoxDecoration(
-                    color:
-                        _recordingService.isRecording
-                            ? AppConstants.accent4Color.withOpacity(0.1)
-                            : AppConstants.accent3Color.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        _recordingService.isRecording
-                            ? Icons.fiber_manual_record
-                            : Icons.check_circle,
+
+                  // Recording status indicator
+                  if (_recordingStatus.isNotEmpty)
+                    Container(
+                      margin: EdgeInsets.only(
+                        top: SizeConfig.blockSizeVertical * 1.5,
+                      ),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: SizeConfig.blockSizeHorizontal * 3,
+                        vertical: SizeConfig.blockSizeVertical * 1,
+                      ),
+                      decoration: BoxDecoration(
                         color:
                             _recordingService.isRecording
-                                ? AppConstants.accent4Color
-                                : AppConstants.accent3Color,
-                        size: 12,
+                                ? AppConstants.accent4Color.withOpacity(0.1)
+                                : AppConstants.accent3Color.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(
+                          SizeConfig.blockSizeHorizontal * 1.5,
+                        ),
                       ),
-                      SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          _recordingStatus,
-                          style: TextStyle(
-                            fontSize: 11,
+                      child: Row(
+                        children: [
+                          Icon(
+                            _recordingService.isRecording
+                                ? Icons.fiber_manual_record
+                                : Icons.check_circle,
                             color:
                                 _recordingService.isRecording
                                     ? AppConstants.accent4Color
                                     : AppConstants.accent3Color,
+                            size: SizeConfig.imageSizeMultiplier * 3,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                          SizedBox(width: SizeConfig.blockSizeHorizontal * 1.5),
+                          Expanded(
+                            child: Text(
+                              _recordingStatus,
+                              style: TextStyle(
+                                fontSize: SizeConfig.textMultiplier * 1.4,
+                                color:
+                                    _recordingService.isRecording
+                                        ? AppConstants.accent4Color
+                                        : AppConstants.accent3Color,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
+
+                  // Anatomy visualization with indicator
+                  Container(
+                    height:
+                        SizeConfig.orientation == Orientation.portrait
+                            ? SizeConfig.screenHeight * 0.25
+                            : SizeConfig.screenHeight * 0.32,
+                    width: double.infinity,
+                    margin: EdgeInsets.symmetric(
+                      vertical: SizeConfig.blockSizeVertical * 2,
+                    ),
+                    child: StackedSvgImages(
+                      upperImagePath: _lobes[_currentLobeIndex]['imagePath'],
+                      xCoordinate: _lobes[_currentLobeIndex]['xCoordinate'],
+                      yCoordinate: _lobes[_currentLobeIndex]['yCoordinate'],
+                      lowerImagePath:
+                          _lobes[_currentLobeIndex]['baseImagePath'],
+                    ),
                   ),
-                ),
 
-              // Anatomy visualization with indicator
-              SizedBox(
-                height: SizeConfig.screenHeight * 0.32,
-                child: StackedSvgImages(
-                  upperImagePath: _lobes[_currentLobeIndex]['imagePath'],
-                  xCoordinate: _lobes[_currentLobeIndex]['xCoordinate'],
-                  yCoordinate: _lobes[_currentLobeIndex]['yCoordinate'],
-                  lowerImagePath: _lobes[_currentLobeIndex]['baseImagePath'],
-                ),
-              ),
-
-              // Instruction text
-              Padding(
-                padding: EdgeInsets.symmetric(
-                  vertical: SizeConfig.blockSizeVertical * 2,
-                ),
-                child: Text(
-                  _getInstructionText(),
-                  textAlign: TextAlign.center,
-                  style: Theme.of(
-                    context,
-                  ).extension<AppTypography>()!.heading5Medium.copyWith(
-                    color:
-                        _isScanning
-                            ? AppConstants.primaryColor
-                            : AppConstants.neutral1Color,
+                  // Instruction text
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      vertical: SizeConfig.blockSizeVertical * 0,
+                      horizontal: SizeConfig.blockSizeHorizontal * 2,
+                    ),
+                    child: Text(
+                      _getInstructionText(),
+                      textAlign: TextAlign.center,
+                      style: Theme.of(
+                        context,
+                      ).extension<AppTypography>()!.heading5Medium.copyWith(
+                        color:
+                            _isScanning
+                                ? AppConstants.primaryColor
+                                : AppConstants.neutral1Color,
+                        fontSize: SizeConfig.textMultiplier * 2.0,
+                        height: 1.4,
+                      ),
+                    ),
                   ),
-                ),
-              ),
 
-              // Circular Countdown Timer
-              CircularCountDownTimer(
-                duration: _duration,
-                initialDuration: 0,
-                controller: _countDownController,
-                width: SizeConfig.blockSizeHorizontal * 45,
-                height: SizeConfig.blockSizeHorizontal * 45,
-                ringColor: Colors.grey.withOpacity(0.3),
-                fillColor: AppConstants.primaryColor,
-                backgroundColor: Colors.white,
-                strokeWidth: 4.0,
-                strokeCap: StrokeCap.round,
-                textStyle: TextStyle(
-                  fontSize: SizeConfig.textMultiplier * 3.0,
-                  fontWeight: FontWeight.w300,
-                  color: AppConstants.primaryColor,
-                ),
-                textFormat: CountdownTextFormat.MM_SS,
-                isReverse: false,
-                isReverseAnimation: false,
-                isTimerTextShown: true,
-                autoStart: false,
-                onStart: () {
-                  setState(() {
-                    _isScanning = true;
-                  });
-                  print(
-                    'Timer started for ${_lobes[_currentLobeIndex]['label']}',
-                  );
-                },
-                onComplete: () async {
-                  setState(() {
-                    _isScanning = false;
-                    _hasCompletedCurrentLobe = true;
-                  });
+                  // Circular Countdown Timer
+                  Container(
+                    alignment: Alignment.center,
+                    margin: EdgeInsets.symmetric(
+                      vertical: SizeConfig.blockSizeVertical * 2,
+                    ),
+                    child: CircularCountDownTimer(
+                      duration: _duration,
+                      initialDuration: 0,
+                      controller: _countDownController,
+                      width:
+                          SizeConfig.orientation == Orientation.portrait
+                              ? SizeConfig.blockSizeHorizontal * 40
+                              : SizeConfig.blockSizeHorizontal * 25,
+                      height:
+                          SizeConfig.orientation == Orientation.portrait
+                              ? SizeConfig.blockSizeHorizontal * 40
+                              : SizeConfig.blockSizeHorizontal * 25,
+                      ringColor: Colors.grey.withOpacity(0.3),
+                      fillColor: AppConstants.primaryColor,
+                      backgroundColor: Colors.white,
+                      strokeWidth: SizeConfig.blockSizeHorizontal * 1,
+                      strokeCap: StrokeCap.round,
+                      textStyle: TextStyle(
+                        fontSize: SizeConfig.textMultiplier * 3.2,
+                        fontWeight: FontWeight.w300,
+                        color: AppConstants.primaryColor,
+                      ),
+                      textFormat: CountdownTextFormat.MM_SS,
+                      isReverse: false,
+                      isReverseAnimation: false,
+                      isTimerTextShown: true,
+                      autoStart: false,
+                      onStart: () {
+                        setState(() {
+                          _isScanning = true;
+                        });
+                        print(
+                          'Timer started for ${_lobes[_currentLobeIndex]['label']}',
+                        );
+                      },
+                      onComplete: () async {
+                        setState(() {
+                          _isScanning = false;
+                          _hasCompletedCurrentLobe = true;
+                        });
 
-                  // Stop recording when timer completes
-                  try {
-                    String? recordedFile =
-                        await _recordingService.stopRecording();
-                    if (recordedFile != null) {
-                      _recordedFiles[_currentLobeIndex] = recordedFile;
-                      print(
-                        'Recording completed for ${_lobes[_currentLobeIndex]['label']}: $recordedFile',
-                      );
-                    }
-                  } catch (e) {
-                    print('Error stopping recording: $e');
-                  }
-                },
-              ),
+                        // Stop recording when timer completes
+                        try {
+                          String? recordedFile =
+                              await _recordingService.stopRecording();
+                          if (recordedFile != null) {
+                            _recordedFiles[_currentLobeIndex] = recordedFile;
+                            print(
+                              'Recording completed for ${_lobes[_currentLobeIndex]['label']}: $recordedFile',
+                            );
+                          }
+                        } catch (e) {
+                          print('Error stopping recording: $e');
+                        }
+                      },
+                    ),
+                  ),
 
-              Spacer(),
+                  // Flexible spacer to push buttons to bottom
+                  Expanded(child: SizedBox()),
 
-              // Action buttons
-              Padding(
-                padding: EdgeInsets.only(
-                  bottom: SizeConfig.blockSizeVertical * 2,
-                ),
-                child: Column(
-                  children: [
-                    // Primary button (Start/Next/Show Results)
-                    SizedBox(
-                      width: double.infinity,
-                      height: SizeConfig.blockSizeVertical * 6,
-                      child: ElevatedButton(
-                        onPressed:
-                            _isPrimaryButtonEnabled()
-                                ? _handlePrimaryButtonPress
-                                : null,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppConstants.primaryColor,
-                          disabledBackgroundColor: AppConstants.primaryColor
-                              .withOpacity(0.5),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            if (_isScanning) ...[
-                              SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                    Colors.white,
-                                  ),
+                  // Action buttons
+                  Container(
+                    padding: EdgeInsets.only(
+                      bottom: SizeConfig.blockSizeVertical * 2,
+                    ),
+                    child: Column(
+                      children: [
+                        // Primary button (Start/Next/Show Results)
+                        SizedBox(
+                          width: double.infinity,
+                          height:
+                              SizeConfig.orientation == Orientation.portrait
+                                  ? SizeConfig.blockSizeVertical * 6.5
+                                  : SizeConfig.blockSizeVertical * 8,
+                          child: ElevatedButton(
+                            onPressed:
+                                _isPrimaryButtonEnabled()
+                                    ? _handlePrimaryButtonPress
+                                    : null,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppConstants.primaryColor,
+                              disabledBackgroundColor: AppConstants.primaryColor
+                                  .withOpacity(0.5),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(
+                                  SizeConfig.blockSizeHorizontal * 1,
                                 ),
                               ),
-                              SizedBox(width: 8),
-                            ],
-                            Text(
-                              _getPrimaryButtonText(),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                if (_isScanning) ...[
+                                  SizedBox(
+                                    width: SizeConfig.imageSizeMultiplier * 4,
+                                    height: SizeConfig.imageSizeMultiplier * 4,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    width: SizeConfig.blockSizeHorizontal * 2,
+                                  ),
+                                ],
+                                Text(
+                                  _getPrimaryButtonText(),
+                                  style: Theme.of(context)
+                                      .extension<AppTypography>()!
+                                      .body1SemiBoldWithColor(Colors.white)
+                                      .copyWith(
+                                        fontSize:
+                                            SizeConfig.textMultiplier * 2.0,
+                                      ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+
+                        SizedBox(height: SizeConfig.blockSizeVertical * 2),
+
+                        // Secondary button (Back/Scan Again)
+                        SizedBox(
+                          width: double.infinity,
+                          height:
+                              SizeConfig.orientation == Orientation.portrait
+                                  ? SizeConfig.blockSizeVertical * 6.5
+                                  : SizeConfig.blockSizeVertical * 8,
+                          child: OutlinedButton(
+                            onPressed: _handleSecondaryButtonPress,
+                            style: OutlinedButton.styleFrom(
+                              side: BorderSide(
+                                color:
+                                    _hasStartedCurrentLobe
+                                        ? AppConstants.accent2Color
+                                        : AppConstants.primaryColor,
+                                width: SizeConfig.blockSizeHorizontal * 0.3,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(
+                                  SizeConfig.blockSizeHorizontal * 1,
+                                ),
+                              ),
+                            ),
+                            child: Text(
+                              _getSecondaryButtonText(),
                               style: Theme.of(context)
                                   .extension<AppTypography>()!
-                                  .body1SemiBoldWithColor(Colors.white),
+                                  .body1SemiBoldWithColor(
+                                    _hasStartedCurrentLobe
+                                        ? AppConstants.accent2Color
+                                        : AppConstants.primaryColor,
+                                  )
+                                  .copyWith(
+                                    fontSize: SizeConfig.textMultiplier * 2.0,
+                                  ),
                             ),
-                          ],
+                          ),
                         ),
-                      ),
+                      ],
                     ),
-
-                    SizedBox(height: SizeConfig.blockSizeVertical * 1.5),
-
-                    // Secondary button (Back/Scan Again)
-                    SizedBox(
-                      width: double.infinity,
-                      height: SizeConfig.blockSizeVertical * 6,
-                      child: OutlinedButton(
-                        onPressed: _handleSecondaryButtonPress,
-                        style: OutlinedButton.styleFrom(
-                          side: BorderSide(
-                            color:
-                                _hasStartedCurrentLobe
-                                    ? AppConstants.accent2Color
-                                    : AppConstants.primaryColor,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                        ),
-                        child: Text(
-                          _getSecondaryButtonText(),
-                          style: Theme.of(
-                            context,
-                          ).extension<AppTypography>()!.body1SemiBoldWithColor(
-                            _hasStartedCurrentLobe
-                                ? AppConstants.accent2Color
-                                : AppConstants.primaryColor,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );
